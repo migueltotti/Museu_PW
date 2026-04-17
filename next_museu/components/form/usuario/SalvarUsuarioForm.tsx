@@ -4,23 +4,38 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import z from 'zod';
-import { UsuarioSchema } from '../../../schema/usuario-schemas';
+import { UsuarioCreate, UsuarioResponse, UsuarioSchema } from '../../../schema/usuario-schemas';
+import { ApiResponse } from '../../../type/api';
 import { Button } from '../../ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../../ui/card';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '../../ui/field';
 import { Input } from '../../ui/input';
 import { InputGroup, InputGroupAddon, InputGroupText, InputGroupTextarea } from '../../ui/input-group';
+import { salvarUsuarioAction } from '../../../action/usuario/salvar-usuario-action';
+import React, { startTransition } from 'react';
+
+const initState: ApiResponse<UsuarioResponse> = {
+  status: 0,
+  timestamp: '',
+  mensagem: '',
+  erro: null,
+  errors: undefined,
+  dados: undefined,
+  success: undefined,
+};
 
 export function SalvarUsuarioForm() {
+  const [state, action, isPending] = React.useActionState(salvarUsuarioAction, initState);
+
   const form = useForm<z.infer<typeof UsuarioSchema>>({
     resolver: zodResolver(UsuarioSchema),
     defaultValues: {
-      title: '',
-      description: '',
+      username: '',
+      email: '',
     },
   });
 
-  function onSubmit(data: z.infer<typeof UsuarioSchema>) {
+  function onSubmit(data: UsuarioCreate) {
     toast('You submitted the following values:', {
       description: (
         <pre className="mt-2 w-[320px] overflow-x-auto rounded-md bg-code p-4 text-code-foreground">
@@ -35,23 +50,30 @@ export function SalvarUsuarioForm() {
         '--border-radius': 'calc(var(--radius)  + 4px)',
       } as React.CSSProperties,
     });
+
+    startTransition(() => {
+      action({
+        usuarioRequest: data,
+        url: 'usuario',
+      });
+    });
   }
 
   return (
     <Card className="w-full sm:max-w-md">
       <CardHeader>
-        <CardTitle>Bug Report</CardTitle>
-        <CardDescription>Help us improve by reporting bugs you encounter.</CardDescription>
+        <CardTitle>Cadastrar usuario</CardTitle>
+        <CardDescription>formulario para cadastro de usuario.</CardDescription>
       </CardHeader>
       <CardContent>
         <form id="form-rhf-demo" onSubmit={form.handleSubmit(onSubmit)}>
           <FieldGroup>
             <Controller
-              name="title"
+              name="username"
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="form-rhf-demo-title">Bug Title</FieldLabel>
+                  <FieldLabel htmlFor="form-rhf-demo-title">Ussernane</FieldLabel>
                   <Input
                     {...field}
                     id="form-rhf-demo-title"
@@ -64,11 +86,11 @@ export function SalvarUsuarioForm() {
               )}
             />
             <Controller
-              name="description"
+              name="email"
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="form-rhf-demo-description">Description</FieldLabel>
+                  <FieldLabel htmlFor="form-rhf-demo-description">Email</FieldLabel>
                   <InputGroup>
                     <InputGroupTextarea
                       {...field}
